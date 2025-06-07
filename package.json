@@ -4,10 +4,10 @@
   "description": "Chrome extension and MCP server for comprehensive browser automation with AI agents",
   "main": "src/server/index.js",
   "scripts": {
-    "build": "npm run build:extension && npm run build:server",
+    "build": "pnpm run build:extension && pnpm run build:server",
     "build:extension": "webpack --config webpack.config.js",
     "build:server": "tsc --project tsconfig.server.json",
-    "dev": "concurrently \"npm run dev:extension\" \"npm run dev:server\"",
+    "dev": "concurrently \"pnpm run dev:extension\" \"pnpm run dev:server\"",
     "dev:extension": "webpack --config webpack.config.js --watch",
     "dev:server": "tsx watch src/server/index.ts",
     "start": "node dist/server/index.js",
@@ -23,7 +23,7 @@
   ],
   "author": "Ben Smith",
   "license": "MIT",
-  "packageManager": "pnpm@10.11.0",
+  "packageManager": "pnpm@10.11.1",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.5.0",
     "ws": "^8.18.0",
