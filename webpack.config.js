@@ -45,6 +45,14 @@ module.exports = {
           from: "src/extension/devtools-panel.html",
           to: "devtools-panel.html",
         },
+        {
+          from: "src/extension/devtools.js",
+          to: "devtools.js",
+        },
+        {
+          from: "src/extension/devtools-panel.js",
+          to: "devtools-panel.js",
+        },
       ],
     }),
   ],
