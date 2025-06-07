@@ -14,4 +14,7 @@ dist/
 
 # Package manager lock files (keep pnpm-lock.yaml)
 package-lock.json
-yarn.lock 
+yarn.lock
+
+# Test coverage
+coverage/ 
