@@ -37,6 +37,14 @@ module.exports = {
           from: "src/extension/popup/popup.html",
           to: "popup.html",
         },
+        {
+          from: "src/extension/devtools.html",
+          to: "devtools.html",
+        },
+        {
+          from: "src/extension/devtools-panel.html",
+          to: "devtools-panel.html",
+        },
       ],
     }),
   ],
