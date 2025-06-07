@@ -188,40 +188,49 @@ We welcome contributions! This project aims to be the definitive browser automat
 
 ## 📋 Roadmap
 
+### Minimal Viable Product (MVP)
+
+Core features needed for basic AI agent browser interaction:
+
+- [ ] **DOM Read Access**: Query elements, extract text/attributes, get page structure
+- [ ] **Console Logs Read Access**: Monitor JavaScript console output, errors, warnings
+- [ ] **Network Logs Read Access**: Track HTTP requests/responses, API calls, resource loading
+
 ### Phase 1: Foundation (Weeks 1-2)
 
-- [ ] Basic Chrome extension structure
-- [ ] MCP server implementation
-- [ ] Core navigation commands
-- [ ] Element interaction (click, type)
+- [ ] Basic Chrome extension structure (manifest, content scripts, background worker)
+- [ ] MCP server implementation (protocol handling, command routing)
+- [ ] **MVP: DOM read access** (`querySelector`, `getText`, `getAttributes`, `getHTML`)
+- [ ] **MVP: Console logs monitoring** (capture console.log, errors, warnings)
+- [ ] **MVP: Network request tracking** (monitor XHR, fetch, resource requests)
 
-### Phase 2: DevTools Integration (Weeks 3-4)
+### Phase 2: Core Automation (Weeks 3-4)
 
-- [ ] Console log monitoring
-- [ ] Network request tracking
-- [ ] Element inspection tools
-- [ ] Screenshot capabilities
+- [ ] Navigation commands (`navigate`, `back`, `forward`, `reload`)
+- [ ] Element interaction (`click`, `type`, `submit`)
+- [ ] Basic waiting mechanisms (`waitForElement`, `waitForNavigation`)
+- [ ] Screenshot capabilities (`captureScreenshot`, `captureElement`)
 
 ### Phase 3: Advanced Features (Weeks 5-6)
 
-- [ ] Form automation
-- [ ] Multi-tab management
-- [ ] File upload/download
-- [ ] Advanced DOM querying
+- [ ] Form automation (`fillForm`, `selectOption`, `uploadFile`)
+- [ ] Multi-tab management (`openTab`, `switchTab`, `closeTab`)
+- [ ] Advanced DOM querying (`findByText`, `findByAttribute`, `getTableData`)
+- [ ] Drag & drop functionality (`dragAndDrop`)
 
 ### Phase 4: AI Optimization (Weeks 7-8)
 
-- [ ] Smart element detection
-- [ ] Context-aware responses
-- [ ] Error recovery mechanisms
-- [ ] Performance optimization
+- [ ] Smart element detection (find clickable elements, form fields, navigation menus)
+- [ ] Context-aware responses (track page state, navigation history)
+- [ ] Error recovery mechanisms (automatic retry logic, fallback selectors)
+- [ ] Performance optimization (efficient DOM queries, memory management)
 
 ### Phase 5: Polish & Distribution (Weeks 9-10)
 
-- [ ] Comprehensive testing
-- [ ] Documentation completion
-- [ ] Chrome Web Store preparation
-- [ ] Community feedback integration
+- [ ] Comprehensive testing (automated testing, browser compatibility)
+- [ ] Documentation completion (API docs, tutorials, example use cases)
+- [ ] Chrome Web Store preparation (store listing, permissions review)
+- [ ] Community feedback integration (user testing, feature requests)
 
 ## 📄 License
 
