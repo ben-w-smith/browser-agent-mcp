@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Browser Agent MCP DevTools</title>
+  </head>
+  <body>
+    <script>
+      // DevTools page for Browser Agent MCP
+      // This creates a panel in Chrome DevTools for advanced debugging
+
+      chrome.devtools.panels.create(
+        "Browser Agent MCP",
+        "icon.png",
+        "devtools-panel.html",
+        (panel) => {
+          console.log("Browser Agent MCP DevTools panel created");
+        }
+      );
+    </script>
+  </body>
+</html>
