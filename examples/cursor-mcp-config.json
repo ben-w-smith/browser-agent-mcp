@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/ModelContextProtocol/specifications/main/schema/mcp_config_schema.json",
+  "mcpServers": {
+    "browser-agent": {
+      "command": "npx",
+      "args": ["browser-agent-mcp"],
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
+}

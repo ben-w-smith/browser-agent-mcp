@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "browser-agent": {
+      "command": "browser-agent-mcp"
+    }
+  }
+}
