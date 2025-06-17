@@ -10,11 +10,28 @@ import {
   ListToolsRequestSchema,
   Tool,
 } from "@modelcontextprotocol/sdk/types.js";
-import WebSocket from "ws";
+import { WebSocketServer, WebSocket } from "ws";
+
+// Helper function for conditional logging
+const debug = (...args: any[]) => {
+  // Only log if not in production MCP mode or if DEBUG is set
+  if (process.env.NODE_ENV !== "production" || process.env.DEBUG) {
+    console.log(...args);
+  }
+};
+
+const debugError = (...args: any[]) => {
+  // Always log errors, but to stderr to not interfere with MCP stdio
+  if (process.env.NODE_ENV === "production") {
+    console.error(...args);
+  } else {
+    console.error(...args);
+  }
+};
 
 class BrowserAgentMCPServer {
   private server: Server;
-  private wsServer: WebSocket.Server;
+  private wsServer!: WebSocketServer;
   private extensionConnection: WebSocket | null = null;
 
   constructor() {
@@ -31,36 +48,67 @@ class BrowserAgentMCPServer {
     );
 
     // Create WebSocket server for extension communication
-    this.wsServer = new WebSocket.Server({ port: 3000 });
+    // Try different ports if 3000 is busy
     this.setupWebSocketServer();
     this.setupMCPHandlers();
   }
 
   private setupWebSocketServer() {
+    // Try ports 3000-3005 to find an available one
+    this.tryStartWebSocketServer(3000);
+  }
+
+  private tryStartWebSocketServer(port: number) {
+    try {
+      this.wsServer = new WebSocketServer({ port });
+
+      this.wsServer.on("error", (error: any) => {
+        if (error.code === "EADDRINUSE" && port < 3005) {
+          debug(`Port ${port} in use, trying ${port + 1}...`);
+          this.tryStartWebSocketServer(port + 1);
+        } else {
+          debugError("WebSocket server error:", error);
+        }
+      });
+
+      this.wsServer.on("listening", () => {
+        debug(`WebSocket server listening on port ${port}`);
+      });
+
+      this.setupWebSocketHandlers();
+    } catch (error) {
+      if (port < 3005) {
+        this.tryStartWebSocketServer(port + 1);
+      } else {
+        debugError("Could not start WebSocket server on any port 3000-3005");
+      }
+    }
+  }
+
+  private setupWebSocketHandlers() {
     this.wsServer.on("connection", (ws) => {
-      console.log("Chrome extension connected");
+      debug("🎯 Chrome extension connected to MCP server");
       this.extensionConnection = ws;
 
       ws.on("message", (data) => {
         try {
           const message = JSON.parse(data.toString());
+          debug("📨 Received message from extension:", message);
           this.handleExtensionMessage(message);
         } catch (error) {
-          console.error("Error parsing extension message:", error);
+          debugError("Error parsing extension message:", error);
         }
       });
 
       ws.on("close", () => {
-        console.log("Chrome extension disconnected");
+        debug("❌ Chrome extension disconnected");
         this.extensionConnection = null;
       });
 
       ws.on("error", (error) => {
-        console.error("WebSocket error:", error);
+        debugError("WebSocket error:", error);
       });
     });
-
-    console.log("WebSocket server listening on port 3000");
   }
 
   private setupMCPHandlers() {
@@ -229,7 +277,11 @@ class BrowserAgentMCPServer {
   private async sendToExtension(message: any): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!this.extensionConnection) {
-        reject(new Error("Extension not connected"));
+        reject(
+          new Error(
+            "Chrome extension not connected. Please ensure the Browser Agent MCP extension is loaded and active in Chrome."
+          )
+        );
         return;
       }
 
@@ -241,7 +293,7 @@ class BrowserAgentMCPServer {
         reject(new Error("Extension request timeout"));
       }, 10000);
 
-      const responseHandler = (data: WebSocket.Data) => {
+      const responseHandler = (data: any) => {
         try {
           const response = JSON.parse(data.toString());
           if (response.id === messageId) {
@@ -376,16 +428,35 @@ class BrowserAgentMCPServer {
 
   private handleExtensionMessage(message: any) {
     // Handle messages from the extension (like console logs, network requests)
-    console.log("Received from extension:", message);
+    debug("✅ Processing extension message:", message);
+
+    // Respond to test messages
+    if (message.type === "connection_test") {
+      debug(
+        "🎉 Connection test successful! Extension is communicating with MCP server"
+      );
+
+      // Send a response back to confirm two-way communication
+      if (this.extensionConnection) {
+        this.extensionConnection.send(
+          JSON.stringify({
+            type: "connection_test_response",
+            message: "MCP server received your message successfully!",
+            originalMessage: message,
+            timestamp: new Date().toISOString(),
+          })
+        );
+      }
+    }
   }
 
   async start() {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
-    console.log("Browser Agent MCP Server started");
+    debug("Browser Agent MCP Server started");
   }
 }
 
 // Start the server
 const server = new BrowserAgentMCPServer();
-server.start().catch(console.error);
+server.start().catch(debugError);

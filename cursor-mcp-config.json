@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "browser-agent": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\benws\\development\\browser-agent-mcp\\dist\\server\\index.js"
+      ],
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
+}

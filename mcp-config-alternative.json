@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "browser-agent": {
+      "command": "pnpm",
+      "args": ["mcp"],
+      "cwd": "C:\\Users\\benws\\development\\browser-agent-mcp"
+    }
+  }
+}

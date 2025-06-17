@@ -87,38 +87,103 @@ class BackgroundService {
     // Handle incoming MCP commands and route to appropriate handlers
     console.log("Received MCP message:", message);
 
-    switch (message.method) {
-      case "dom/query":
-        await this.executeDOMQuery(message.params);
-        break;
-      case "console/getLogs":
-        await this.getConsoleLogs(message.params);
-        break;
-      case "network/getRequests":
-        await this.getNetworkRequests(message.params);
-        break;
+    try {
+      let result;
+
+      // Handle different message types from MCP server
+      switch (message.type) {
+        case "DOM_QUERY":
+          result = await this.handleDOMQuery(message.payload);
+          this.sendMCPResponse(message.id, { success: true, data: result });
+          break;
+
+        case "GET_CONSOLE_LOGS":
+          result = await this.getConsoleLogs(message.payload);
+          this.sendMCPResponse(message.id, { success: true, data: result });
+          break;
+
+        case "GET_NETWORK_REQUESTS":
+          result = await this.getNetworkRequests(message.payload);
+          this.sendMCPResponse(message.id, { success: true, data: result });
+          break;
+
+        case "GET_PAGE_INFO":
+          result = await this.getPageInfo(message.payload);
+          this.sendMCPResponse(message.id, { success: true, data: result });
+          break;
+
+        case "DOM_CLICK":
+          await this.handleDOMClick(message.payload);
+          this.sendMCPResponse(message.id, { success: true });
+          break;
+
+        case "DOM_TYPE":
+          await this.handleDOMType(message.payload);
+          this.sendMCPResponse(message.id, { success: true });
+          break;
+
+        // Legacy method-based messages (keep for compatibility)
+        case "dom/query":
+          await this.executeDOMQuery(message.params);
+          break;
+        case "console/getLogs":
+          await this.getConsoleLogs(message.params);
+          break;
+        case "network/getRequests":
+          await this.getNetworkRequests(message.params);
+          break;
+
+        default:
+          if (message.type !== "connection_test_response") {
+            console.warn("Unknown MCP message type:", message.type);
+          }
+      }
+    } catch (error) {
+      console.error("Error handling MCP message:", error);
+      if (message.id) {
+        this.sendMCPResponse(message.id, {
+          success: false,
+          error: (error as Error).message,
+        });
+      }
     }
   }
 
   private async handleDOMQuery(payload: any, tabId?: number): Promise<any> {
-    if (!tabId) throw new Error("No tab ID provided");
+    const targetTabId =
+      tabId || payload.tabId || (await this.tabManager.getActiveTabId());
 
     // Execute DOM query in the specified tab
     const results = await chrome.scripting.executeScript({
-      target: { tabId },
-      func: (selector: string) => {
+      target: { tabId: targetTabId },
+      func: (selector: string, action: string = "query") => {
         const elements = document.querySelectorAll(selector);
-        return Array.from(elements).map((el) => ({
-          tagName: el.tagName,
-          textContent: el.textContent,
-          innerHTML: el.innerHTML,
-          attributes: Array.from(el.attributes).reduce((acc, attr) => {
-            acc[attr.name] = attr.value;
-            return acc;
-          }, {} as Record<string, string>),
-        }));
+
+        if (action === "getText") {
+          return Array.from(elements).map((el) => el.textContent?.trim() || "");
+        } else if (action === "getAttributes") {
+          return Array.from(elements).map((el) =>
+            Array.from(el.attributes).reduce((acc, attr) => {
+              acc[attr.name] = attr.value;
+              return acc;
+            }, {} as Record<string, string>)
+          );
+        } else if (action === "getHTML") {
+          return Array.from(elements).map((el) => el.outerHTML);
+        } else {
+          // Default "query" action
+          return Array.from(elements).map((el) => ({
+            tagName: el.tagName,
+            textContent: el.textContent?.trim() || "",
+            innerHTML: el.innerHTML,
+            attributes: Array.from(el.attributes).reduce((acc, attr) => {
+              acc[attr.name] = attr.value;
+              return acc;
+            }, {} as Record<string, string>),
+          }));
+        }
       },
-      args: [payload.selector],
+      args: [payload.selector, payload.action],
     });
 
     return results[0]?.result || [];
@@ -178,6 +243,67 @@ class BackgroundService {
     await this.mcpConnection.sendResponse({
       id: params.id,
       result: requests,
+    });
+  }
+
+  private async sendMCPResponse(messageId: string, response: any) {
+    const responseMessage = {
+      id: messageId,
+      ...response,
+    };
+    await this.mcpConnection.sendMessage(responseMessage);
+  }
+
+  private async getPageInfo(params: any): Promise<any> {
+    const tabId = params.tabId || (await this.tabManager.getActiveTabId());
+
+    // Get page information using chrome.tabs API
+    const tab = await chrome.tabs.get(tabId);
+
+    return {
+      title: tab.title,
+      url: tab.url,
+      favIconUrl: tab.favIconUrl,
+      status: tab.status,
+    };
+  }
+
+  private async handleDOMClick(params: any): Promise<void> {
+    const tabId = params.tabId || (await this.tabManager.getActiveTabId());
+
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      func: (selector: string) => {
+        const element = document.querySelector(selector) as HTMLElement;
+        if (element) {
+          element.click();
+        } else {
+          throw new Error(`Element not found: ${selector}`);
+        }
+      },
+      args: [params.selector],
+    });
+  }
+
+  private async handleDOMType(params: any): Promise<void> {
+    const tabId = params.tabId || (await this.tabManager.getActiveTabId());
+
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      func: (selector: string, text: string, clear: boolean = true) => {
+        const element = document.querySelector(selector) as HTMLInputElement;
+        if (element) {
+          if (clear) {
+            element.value = "";
+          }
+          element.value += text;
+          // Trigger input event
+          element.dispatchEvent(new Event("input", { bubbles: true }));
+        } else {
+          throw new Error(`Element not found: ${selector}`);
+        }
+      },
+      args: [params.selector, params.text, params.clear],
     });
   }
 }
