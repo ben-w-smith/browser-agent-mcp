@@ -11,6 +11,8 @@ import {
   Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 import { WebSocketServer, WebSocket } from "ws";
+import path from "path";
+import { fileURLToPath } from "url";
 
 // Helper function for conditional logging
 const debug = (...args: any[]) => {
@@ -457,6 +459,73 @@ class BrowserAgentMCPServer {
   }
 }
 
-// Start the server
-const server = new BrowserAgentMCPServer();
-server.start().catch(debugError);
+// Handle command line arguments
+const args = process.argv.slice(2);
+
+if (args.includes("--help") || args.includes("-h")) {
+  console.log(`
+Browser Agent MCP Server
+
+Usage:
+  browser-agent-mcp [command]
+
+Commands:
+  setup    Show setup instructions
+  --help   Show this help message
+
+Default: Start the MCP server
+`);
+  process.exit(0);
+}
+
+if (args.includes("setup")) {
+  // Show setup instructions
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const extensionPath = path.resolve(__dirname, "../extension");
+
+  console.log(`
+🛠️  Browser Agent MCP Setup Guide
+
+📁 Extension Location:
+   ${extensionPath}
+
+📖 Setup Instructions:
+
+1. Load Chrome Extension:
+   • Open chrome://extensions/
+   • Enable "Developer mode" (toggle in top right)
+   • Click "Load unpacked"
+   • Select: ${extensionPath}
+
+2. Configure MCP Client:
+
+   For Cursor (~/.cursor/mcp.json):
+   {
+     "mcpServers": {
+       "browser-agent": {
+         "command": "npx",
+         "args": ["browser-agent-mcp"]
+       }
+     }
+   }
+
+   For Claude Desktop:
+   {
+     "mcpServers": {
+       "browser-agent": {
+         "command": "browser-agent-mcp"
+       }
+     }
+   }
+
+3. Start using browser automation commands!
+
+📚 Documentation: https://github.com/ben-w-smith/browser-agent-mcp#setup
+`);
+  process.exit(0);
+} else {
+  // Start the server
+  const server = new BrowserAgentMCPServer();
+  server.start().catch(debugError);
+}

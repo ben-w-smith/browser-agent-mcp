@@ -1,6 +1,6 @@
 {
   "name": "browser-agent-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Chrome extension and MCP server for comprehensive browser automation with AI agents",
   "type": "module",
   "main": "dist/server/index.js",
@@ -38,8 +38,7 @@
     "lint": "eslint src --ext .ts,.js",
     "clean": "rimraf dist",
     "verify": "node scripts/verify-install.js",
-    "prepublishOnly": "pnpm run clean && pnpm run build && pnpm run test:run",
-    "postinstall": "node scripts/post-install.js"
+    "prepublishOnly": "pnpm run clean && pnpm run build && pnpm run test:run"
   },
   "keywords": [
     "mcp",
